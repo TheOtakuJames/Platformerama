@@ -48,13 +48,13 @@ var player = new Player();
 var keyboard = new Keyboard();
 
 var LAYER_COUNT = 2;
-var MAP = { tw: 20, th: 15 };
+var MAP = { tw: 60, th: 15 };
 var TILE = 35;
 var TILESET_TILE = TILE * 2;
 var TILESET_PADDING = 2;
 var TILESET_SPACING = 2;
 var TILESET_COUNT_X = 14;
-var TILESET_COUNT_Y = 19;
+var TILESET_COUNT_Y = 14;
 
 var tileset = document.createElement("img");
 tileset.src = "tileset.png";
@@ -82,9 +82,11 @@ function run()
 {
 	context.fillStyle = "#ccc";		
 	context.fillRect(0, 0, canvas.width, canvas.height);
-	
+
+	drawMap();
+
 	var deltaTime = getDeltaTime();
-	
+
 	player.update(deltaTime);
 	player.draw();
 	
