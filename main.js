@@ -40,13 +40,6 @@ var fps = 0;
 var fpsCount = 0;
 var fpsTime = 0;
 
-// load an image to draw
-var chuckNorris = document.createElement("img");
-chuckNorris.src = "hero.png";
-
-var player = new Player();
-var keyboard = new Keyboard();
-
     var LAYER_COUNT = 2;
     var MAP = { tw: 60, th: 15 };
     var TILE = 35;
@@ -55,6 +48,13 @@ var keyboard = new Keyboard();
     var TILESET_SPACING = 2;
     var TILESET_COUNT_X = 14;
     var TILESET_COUNT_Y = 14;
+
+    // load an image to draw
+    var chuckNorris = document.createElement("img");
+    chuckNorris.src = "hero.png";
+
+    var player = new Player();
+    var keyboard = new Keyboard();
 
     var cells = []; // the array that holds our simplified collision data
     function initialize() {
