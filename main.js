@@ -56,6 +56,26 @@ var keyboard = new Keyboard();
     var TILESET_COUNT_X = 14;
     var TILESET_COUNT_Y = 14;
 
+
+    // abitrary choice for 1m
+    var METER = TILE;
+    // very exaggerated gravity (6x)
+    var GRAVITY = METER * 9.8 * 6;
+    // max horizontal speed (10 tiles per second)
+    var MAXDX = METER * 10;
+    // max vertical speed (15 tiles per second)
+    var MAXDY = METER * 15;
+    // horizontal acceleration - take 1/2 second to reach maxdx
+    var ACCEL = MAXDX * 2;
+    // horizontal friction - take 1/6 second to stop from maxdx
+    var FRICTION = MAXDX * 6;
+    // (a large) instantaneous jump impulse
+    var JUMP = METER * 1500;
+
+    var tileset = document.createElement("img");
+    tileset.src = "tileset.png";
+
+
     var cells = []; // the array that holds our simplified collision data
     function initialize() {
         for (var layerIdx = 0; layerIdx < LAYER_COUNT; layerIdx++) { // initialize the collision map
@@ -82,24 +102,6 @@ var keyboard = new Keyboard();
             }
         }
     }
-
-    // abitrary choice for 1m
-    var METER = TILE;
-    // very exaggerated gravity (6x)
-    var GRAVITY = METER * 9.8 * 6;
-    // max horizontal speed (10 tiles per second)
-    var MAXDX = METER * 10;
-    // max vertical speed (15 tiles per second)
-    var MAXDY = METER * 15;
-    // horizontal acceleration - take 1/2 second to reach maxdx
-    var ACCEL = MAXDX * 2;
-    // horizontal friction - take 1/6 second to stop from maxdx
-    var FRICTION = MAXDX * 6;
-    // (a large) instantaneous jump impulse
-    var JUMP = METER * 1500;
-
-    var tileset = document.createElement("img");
-    tileset.src = "tileset.png";
 
     function cellAtPixelCoord(layer, x, y) {
         if (x < 0 || x > SCREEN_WIDTH)
