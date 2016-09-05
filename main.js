@@ -40,7 +40,7 @@ var fps = 0;
 var fpsCount = 0;
 var fpsTime = 0;
 
-    var LAYER_COUNT = 2;
+    var LAYER_COUNT = 3;
     var MAP = { tw: 60, th: 15 };
     var TILE = 35;
     var TILESET_TILE = TILE * 2;
@@ -53,8 +53,14 @@ var fpsTime = 0;
     var chuckNorris = document.createElement("img");
     chuckNorris.src = "hero.png";
 
+    var heartImage = document.createElement("img");
+    heartImage.src = "heartpicture.png";
+
     var player = new Player();
     var keyboard = new Keyboard();
+
+    var score = 0;
+    var lives = 3;
 
     var cells = []; // the array that holds our simplified collision data
     function initialize() {
@@ -181,6 +187,22 @@ var fpsTime = 0;
         context.fillStyle = "#f00";
         context.font = "14px Arial";
         context.fillText("FPS: " + fps, 5, 20, 100);
+
+        // score
+        context.fillStyle = "yellow";
+        context.font = "32px Arial";
+        var scoreText = "Score: " + score;
+        context.fillText(scoreText, SCREEN_WIDTH - 170, 35);
+
+        // life counter
+        for (var i = 0; i < lives; i++) {
+            context.drawImage(heartImage, 20 + ((heartImage.width + 2) * i), 10);
+        }
+
+        // respawn player when off screen
+        if (player.width < SCREEN_HEIGHT - 400) {
+            player.draw();
+        }
     }
 
     initialize();
