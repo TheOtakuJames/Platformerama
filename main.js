@@ -40,6 +40,68 @@ var fps = 0;
 var fpsCount = 0;
 var fpsTime = 0;
 
+var musicBackground;
+var sfxFire;
+
+var STATE_SPLASH = 0;
+var STATE_GAME = 1;
+var STATE_GAMEOVER = 2;
+var gameState = STATE_SPLASH;
+
+var splashTimer = 3;
+function runSplash(deltaTime) {
+    splashTimer -= deltaTime;
+    if (splashTimer <= 0) {
+        gameState = STATE_GAME;
+        return;
+    }
+    context.fillStyle = "#000";
+    context.font = "50px Arial";
+    context.fillText("PLATFORMERAMA", 100, 240);
+}
+function runGame(deltaTime)
+{
+    player.update(deltaTime);
+
+    drawMap();
+    player.draw();
+
+    // update the frame counter 
+    fpsTime += deltaTime;
+    fpsCount++;
+    if (fpsTime >= 1) {
+        fpsTime -= 1;
+        fps = fpsCount;
+        fpsCount = 0;
+    }
+
+    // draw the FPS
+    context.fillStyle = "#f00";
+    context.font = "14px Arial";
+    context.fillText("FPS: " + fps, 5, 20, 100);
+
+    // score
+    context.fillStyle = "yellow";
+    context.font = "32px Arial";
+    var scoreText = "Score: " + score;
+    context.fillText(scoreText, SCREEN_WIDTH - 170, 35);
+
+    var hearts = 3;
+
+    // life counter
+    for (var i = 0; i < hearts; i++) {
+        context.drawImage(heartImage, 20 + ((heartImage.width + 2) * i), 10);
+    }
+
+    // respawn player when off screen
+    if (player.position.y > canvas.height) {
+        reset();
+        hearts -= 1;
+    }
+}
+function runGameOver(deltaTime) {
+}
+
     var LAYER_COUNT = 3;
     var MAP = { tw: 60, th: 15 };
     var TILE = 35;
@@ -59,7 +121,8 @@ var fpsTime = 0;
     var player = new Player();
     var keyboard = new Keyboard();
 
-    var score = 0;
+    var score = 0;
+
     var lives = 3;
 
     var cells = []; // the array that holds our simplified collision data
@@ -87,6 +150,23 @@ var fpsTime = 0;
                 }
             }
         }
+        musicBackground = new Howl(
+{
+    urls: ["background.ogg"],
+    loop: true,
+    buffer: true,
+    volume: 0.5
+});
+        musicBackground.play();
+        sfxFire = new Howl(
+        {
+            urls: ["fireEffect.ogg"],
+            buffer: true,
+            volume: 1,
+            onend: function () {
+                isSfxPlaying = false;
+            }
+        });
     }
 
     // abitrary choice for 1m
@@ -144,18 +224,38 @@ var fpsTime = 0;
     var LAYER_PLATFORMS = 1;
     var LAYER_LADDERS = 2;
 
+    var worldOffsetX = 0;
     function drawMap() {
+        var startX = -1
+        var maxTiles = Math.floor(SCREEN_WIDTH / TILE) + 2;        var tileX = pixelToTile(player.position.x);        var offsetX = TILE + Math.floor(player.position.x % TILE);
+        
+        startX = tileX - Math.floor(maxTiles / 2);
+        if (startX < -1) {
+            startX = 0;
+            offsetX = 0;
+        }
+        if (startX > MAP.tw - maxTiles) {
+            startX = MAP.tw - maxTiles + 1;
+            offsetX = TILE;
+        }
+
+        worldOffsetX = startX * TILE + offsetX;
+
         for (var layerIdx = 0; layerIdx < LAYER_COUNT; layerIdx++) {
-            var idx = 0;
             for (var y = 0; y < level1.layers[layerIdx].height; y++) {
-                for (var x = 0; x < level1.layers[layerIdx].width; x++) {
+                var idx = y * level1.layers[layerIdx].width + startX;
+                for (var x = startX; x < startX + maxTiles; x++) {
                     if (level1.layers[layerIdx].data[idx] != 0) {
-                        // the tiles in the Tiled map are base 1 (meaning a value of 0 means no tile), so subtract one from the tileset id to get the
+                        // the tiles in the Tiled map are base 1 (meaning a value of 0 means no tile),
+                        // so subtract one from the tileset id to get the
                         // correct tile
                         var tileIndex = level1.layers[layerIdx].data[idx] - 1;
-                        var sx = TILESET_PADDING + (tileIndex % TILESET_COUNT_X) * (TILESET_TILE + TILESET_SPACING);
-                        var sy = TILESET_PADDING + (Math.floor(tileIndex / TILESET_COUNT_X)) * (TILESET_TILE + TILESET_SPACING);
-                        context.drawImage(tileset, sx, sy, TILESET_TILE, TILESET_TILE, x * TILE, (y - 1) * TILE, TILESET_TILE, TILESET_TILE);
+                        var sx = TILESET_PADDING + (tileIndex % TILESET_COUNT_X) *
+                       (TILESET_TILE + TILESET_SPACING);
+                        var sy = TILESET_PADDING + (Math.floor(tileIndex / TILESET_COUNT_Y)) *
+                       (TILESET_TILE + TILESET_SPACING);
+                        context.drawImage(tileset, sx, sy, TILESET_TILE, TILESET_TILE,
+                       (x - startX) * TILE - offsetX, (y - 1) * TILE, TILESET_TILE, TILESET_TILE);
                     }
                     idx++;
                 }
@@ -171,38 +271,18 @@ var fpsTime = 0;
 
         var deltaTime = getDeltaTime();
 
-        player.update(deltaTime);
-        player.draw();
-
-        // update the frame counter 
-        fpsTime += deltaTime;
-        fpsCount++;
-        if (fpsTime >= 1) {
-            fpsTime -= 1;
-            fps = fpsCount;
-            fpsCount = 0;
-        }
-
-        // draw the FPS
-        context.fillStyle = "#f00";
-        context.font = "14px Arial";
-        context.fillText("FPS: " + fps, 5, 20, 100);
-
-        // score
-        context.fillStyle = "yellow";
-        context.font = "32px Arial";
-        var scoreText = "Score: " + score;
-        context.fillText(scoreText, SCREEN_WIDTH - 170, 35);
-
-        // life counter
-        for (var i = 0; i < lives; i++) {
-            context.drawImage(heartImage, 20 + ((heartImage.width + 2) * i), 10);
-        }
-
-        // respawn player when off screen
-        if (player.width < SCREEN_HEIGHT - 400) {
-            player.draw();
-        }
+        switch(gameState)
+        {
+            case STATE_SPLASH:
+                runSplash(deltaTime);
+                break;
+            case STATE_GAME:
+                runGame(deltaTime);
+                break;
+            case STATE_GAMEOVER:
+                runGameOver(deltaTime);
+                break;
+        }
     }
 
     initialize();

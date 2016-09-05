@@ -8,6 +8,11 @@ var ANIM_JUMP_RIGHT = 4;
 var ANIM_WALK_RIGHT = 5;
 var ANIM_MAX = 6;
 
+
+function reset() {
+    player.position.set(9 * TILE, 0 * TILE);
+}
+
 var Player = function () {
     this.sprite = new Sprite("ChuckNorris.png");
     this.sprite.buildAnimation(12, 8, 165, 126, 0.05,
@@ -38,6 +43,7 @@ var Player = function () {
     this.jumping = false;
 
     this.direction = LEFT;
+    this.cooldownTimer = 0;
 };
 
 Player.prototype.update = function (deltaTime) {
@@ -72,7 +78,7 @@ Player.prototype.update = function (deltaTime) {
             }
         }
     }
-    if (keyboard.isKeyDown(keyboard.KEY_SPACE) == true) {
+    if (keyboard.isKeyDown(keyboard.KEY_UP) == true) {
         jump = true;
         if (left == true) {
             this.sprite.setAnimation(ANIM_JUMP_LEFT);
@@ -80,6 +86,11 @@ Player.prototype.update = function (deltaTime) {
         if (right == true) {
             this.sprite.setAnimation(ANIM_JUMP_RIGHT);
         }
+    }
+    if (keyboard.isKeyDown(keyboard.KEY_SPACE) == true && this.cooldownTimer <= 0) {
+        sfxFire.play();
+        this.cooldownTimer = 0.3;
+        // Shoot a bullet
     }
 
     var wasleft = this.velocity.x < 0;
@@ -178,5 +189,7 @@ Player.prototype.update = function (deltaTime) {
 }
 
 Player.prototype.draw = function () {
-    this.sprite.draw(context, this.position.x, this.position.y);
+    this.sprite.draw(context,
+    this.position.x - worldOffsetX,
+    this.position.y);
 }
