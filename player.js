@@ -89,7 +89,7 @@ Player.prototype.update = function (deltaTime) {
     }
     if (keyboard.isKeyDown(keyboard.KEY_SPACE) == true && this.cooldownTimer <= 0) {
         sfxFire.play();
-        this.cooldownTimer = 0.3;
+        this.cooldownTimer = 0.3 * deltaTime;
         // Shoot a bullet
     }
 
@@ -185,11 +185,14 @@ Player.prototype.update = function (deltaTime) {
             this.velocity.x = 0; // stop horizontal velocity
         }
     }
-
+    if (cellAtTileCoord(LAYER_OBJECT_TRIGGERS, tx, ty) == true) {
+        gameState = STATE_GAMEOVER;
+    }
 }
 
 Player.prototype.draw = function () {
     this.sprite.draw(context,
     this.position.x - worldOffsetX,
-    this.position.y);
+    this.position.y);
+
 }

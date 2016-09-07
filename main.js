@@ -66,27 +66,13 @@ function runGame(deltaTime)
     drawMap();
     player.draw();
 
-    // update the frame counter 
-    fpsTime += deltaTime;
-    fpsCount++;
-    if (fpsTime >= 1) {
-        fpsTime -= 1;
-        fps = fpsCount;
-        fpsCount = 0;
-    }
-
-    // draw the FPS
-    context.fillStyle = "#f00";
-    context.font = "14px Arial";
-    context.fillText("FPS: " + fps, 5, 20, 100);
-
     // score
     context.fillStyle = "yellow";
     context.font = "32px Arial";
     var scoreText = "Score: " + score;
     context.fillText(scoreText, SCREEN_WIDTH - 170, 35);
 
-    var hearts = 3;
+    var hearts = lives;
 
     // life counter
     for (var i = 0; i < hearts; i++) {
@@ -96,13 +82,25 @@ function runGame(deltaTime)
     // respawn player when off screen
     if (player.position.y > canvas.height) {
         reset();
-        hearts -= 1;
+        hearts--;
+        lives -= 1; 
     }
+
+    if (lives <= 0) {
+        gameState = STATE_GAMEOVER;
+        return;
+    }
+    for (var i = 0; i < enemies.length; i++) {
+        enemies[i].update(deltaTime);
+    }
 }
 function runGameOver(deltaTime) {
+    context.fillStyle = "#000";
+    context.font = "50px Arial";
+    context.fillText("GAME OVER", 100, 240);
 }
 
-    var LAYER_COUNT = 3;
+    var LAYER_COUNT = 4;
     var MAP = { tw: 60, th: 15 };
     var TILE = 35;
     var TILESET_TILE = TILE * 2;
@@ -150,6 +148,40 @@ function runGameOver(deltaTime) {
                 }
             }
         }
+
+        // initialize trigger layer in collision map
+        cells[LAYER_OBJECT_TRIGGERS] = [];
+        idx = 0;
+        for (var y = 0; y < level1.layers[LAYER_OBJECT_TRIGGERS].height; y++) {
+            cells[LAYER_OBJECT_TRIGGERS][y] = [];
+            for (var x = 0; x < level1.layers[LAYER_OBJECT_TRIGGERS].width; x++) {
+                if (level1.layers[LAYER_OBJECT_TRIGGERS].data[idx] != 0) {
+                    cells[LAYER_OBJECT_TRIGGERS][y][x] = 1;
+                    cells[LAYER_OBJECT_TRIGGERS][y - 1][x] = 1;
+                    cells[LAYER_OBJECT_TRIGGERS][y - 1][x + 1] = 1;
+                    cells[LAYER_OBJECT_TRIGGERS][y][x + 1] = 1;
+                }
+                else if (cells[LAYER_OBJECT_TRIGGERS][y][x] != 1) {
+                    // if we haven't set this cell's value, then set it to 0 now
+                    cells[LAYER_OBJECT_TRIGGERS][y][x] = 0;
+                }
+                idx++;
+            }
+        }
+
+        //add enemies
+        idx = 0;
+        for (var y = 0; y < level1.layers[LAYER_OBJECT_ENEMIES].height; y++) {
+            for (var x = 0; x < level1.layers[LAYER_OBJECT_ENEMIES].width; x++) {
+                if (level1.layers[LAYER_OBJECT_ENEMIES].data[idx] != 0) {
+                    var px = tileToPixel(x);
+                    var py = tileToPixel(y);
+                    var e = new Enemy(px, py);
+                    enemies.push(e);
+                }
+                idx++;
+            }
+        }
         musicBackground = new Howl(
 {
     urls: ["background.ogg"],
@@ -166,7 +198,8 @@ function runGameOver(deltaTime) {
             onend: function () {
                 isSfxPlaying = false;
             }
-        });
+        });
+
     }
 
     // abitrary choice for 1m
@@ -219,15 +252,26 @@ function runGameOver(deltaTime) {
             return max;
         return value;
     }
+    
+    var ENEMY_MAXDX = METER * 5;
+    var ENEMY_ACCEL = ENEMY_MAXDX * 2;
+
+    var enemies = [];
 
     var LAYER_BACKGROUND = 0;
     var LAYER_PLATFORMS = 1;
     var LAYER_LADDERS = 2;
 
+    var LAYER_OBJECT_ENEMIES = 3;
+    var LAYER_OBJECT_TRIGGERS = 4;
+    
+
     var worldOffsetX = 0;
     function drawMap() {
         var startX = -1
-        var maxTiles = Math.floor(SCREEN_WIDTH / TILE) + 2;        var tileX = pixelToTile(player.position.x);        var offsetX = TILE + Math.floor(player.position.x % TILE);
+        var maxTiles = Math.floor(SCREEN_WIDTH / TILE) + 2;
+        var tileX = pixelToTile(player.position.x);
+        var offsetX = TILE + Math.floor(player.position.x % TILE);
         
         startX = tileX - Math.floor(maxTiles / 2);
         if (startX < -1) {
@@ -282,7 +326,8 @@ function runGameOver(deltaTime) {
             case STATE_GAMEOVER:
                 runGameOver(deltaTime);
                 break;
-        }
+        }
+
     }
 
     initialize();
